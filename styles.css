@@ -1,0 +1,157 @@
+/* styles.css */
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 16px;
+    background: #f0f0f0;
+    font-family: sans-serif;
+}
+
+.layout {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+
+#board-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#board {
+    width: 480px;
+    height: 480px;
+}
+#board table {
+    display: table;
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+}
+#board table tr {
+    display: table-row;
+}
+#board table td {
+    display: table-cell;
+    width: 60px;
+    height: 60px;
+    position: relative;
+    text-align: center;
+    vertical-align: middle;
+}
+.light { background: #f0d9b5; }
+.dark  { background: #b58863; }
+
+.selected {
+    box-shadow: inset 0 0 0 3px yellow;
+}
+
+.dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Piece images */
+#board img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* History panel */
+.history {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 8px;
+    width: 220px;
+    max-height: 480px;
+    overflow-y: auto;
+}
+.history h2 {
+    margin: 0 0 8px;
+    font-size: 1em;
+    text-align: center;
+    color: #fff;
+}
+#moveTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+#moveTable th,
+#moveTable td {
+    border: 1px solid #555;
+    padding: 4px;
+    text-align: center;
+    font-size: 0.9em;
+    color: #fff;
+}
+#moveTable th {
+    background: #444;
+}
+
+/* Controls below board */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;        /* space between fen-control & action-buttons */
+    margin-top: 16px; /* breathing room above controls */
+}
+
+/* FEN input group */
+.fen-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.fen-control label {
+    font-size: 16px;
+}
+.fen-control input {
+    width: 500px;
+    padding: 6px;
+    font-size: 16px;
+}
+.fen-control button {
+    padding: 6px 12px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Undo button group */
+.action-buttons button {
+    padding: 6px 12px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Footer */
+footer {
+    margin-top: 24px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.title-header {
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 0 16px;
+    color: #333;
+}

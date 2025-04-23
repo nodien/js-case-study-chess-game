@@ -1,15 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JavaScript Chess Game</title>
-  <link rel="stylesheet" href="css/styles.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>JavaScript Chess Engine</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h2>Chess Game</h2>
-  <div id="board"></div>
-  <button onclick="resetGame()">Reset</button>
+<header class="title-header">Chess Engine by Dien</header>
+<main class="layout">
+    <section id="board-container">
+        <div id="board" aria-label="Chess board"></div>
+    </section>
+
+    <aside id="history" class="history" aria-label="Move History">
+        <h2>Move History</h2>
+        <table id="moveTable">
+            <thead>
+            <tr><th>White</th><th>Black</th></tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </aside>
+</main>
+
+<!-- Controls below board/history -->
+<section class="controls">
+    <div class="fen-control">
+        <label for="fenInput">FEN Position</label>
+        <input
+                type="text"
+                id="fenInput"
+                placeholder="Enter FEN string"
+                value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        />
+        <button id="setFenBtn">Set Position</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+    <div class="action-buttons">
+        <button id="undoBtn">Undo</button>
+    </div>
+</section>
+
+<script type="module" src="main.js"></script>
 </body>
-  <script src="js/script.js"></script>
 </html>
