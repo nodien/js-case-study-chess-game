@@ -67,10 +67,6 @@ export class GameState {
         return this.getLegalMoves().length === 0 && !this.isCheck();
     }
 
-    /**
-     * Simple insufficient‐material detection: only kings,
-     * or king+single minor vs king, etc.
-     */
     hasInsufficientMaterial() {
         // collect all pieces except kings
         const others = this.board.flat().filter(p => p && p.type !== 'king');

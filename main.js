@@ -1,5 +1,3 @@
-// main.js
-
 import { GameState }        from './core/gameState.js';
 import { renderBoard }      from './ui/renderer.js';
 import { notationToCoords, coordsToNotation } from './core/utils.js';
@@ -7,21 +5,24 @@ import Queen                from './pieces/Queen.js';
 import Rook                 from './pieces/Rook.js';
 import Bishop               from './pieces/Bishop.js';
 import Knight               from './pieces/Knight.js';
+import FkNoobBot_v1         from './bot/fkNoobBot_v1.js';
 
-const state     = new GameState();
-const boardEl   = document.getElementById('board');
-const fenInput  = document.getElementById('fenInput');
-const setFenBtn = document.getElementById('setFenBtn');
-const resetBtn  = document.getElementById('resetBtn');
-const undoBtn   = document.getElementById('undoBtn');
-const moveList  = document.getElementById('moveList');
-const flipBtn   = document.getElementById('flipBtn');
+const state         = new GameState();
+const boardEl       = document.getElementById('board');
+const fenInput      = document.getElementById('fenInput');
+const setFenBtn     = document.getElementById('setFenBtn');
+const resetBtn      = document.getElementById('resetBtn');
+const undoBtn       = document.getElementById('undoBtn');
+const flipBtn       = document.getElementById('flipBtn');
+const botSideSelect = document.getElementById('botSide');
+// Now read the static UI checkbox instead of injecting it
+const botToggle     = document.getElementById('enableBot');
 
 let selected    = null;
 let legalMoves  = [];
-let moveHistory = [];  // array of strings
+let moveHistory = [];
+let bot         = null;
 
-/** redraw board & preserve history display */
 function updateBoard() {
     const dests = legalMoves.map(m => m.to);
     renderBoard(state, boardEl, selected, dests);
@@ -32,7 +33,7 @@ function renderHistory() {
     const tbody = document.querySelector('#moveTable tbody');
     tbody.innerHTML = '';
     for (let i = 0; i < moveHistory.length; i += 2) {
-        const whiteMove = moveHistory[i] || '';
+        const whiteMove = moveHistory[i]   || '';
         const blackMove = moveHistory[i+1] || '';
         const tr = document.createElement('tr');
         const tdW = document.createElement('td');
@@ -45,8 +46,63 @@ function renderHistory() {
     }
 }
 
+function handleBotMove(move) {
+    state.makeMove(move);
+    const fromSq = coordsToNotation(move.from);
+    const toSq   = coordsToNotation(move.to);
+    const promo  = move.promotion ? `=${move.promotion.name.charAt(0)}` : '';
+    moveHistory.push(`${fromSq}→${toSq}${promo}`);
 
-// --- controls handlers ---
+    if (state.isCheckmate()) {
+        const winner = state.activeColor === 'w' ? 'Black' : 'White';
+        alert(`${winner} wins by checkmate!`);
+    } else if (state.isStalemate()) {
+        alert('Draw by stalemate.');
+    } else if (state.isDraw()) {
+        alert('Draw.');
+    }
+
+    selected   = null;
+    legalMoves = [];
+    updateBoard();
+
+    if (botToggle.checked && state.activeColor === bot.color) {
+        bot.makeMove(state, handleBotMove);
+    }
+}
+
+function setupBot() {
+    const humanColor = botSideSelect.value;
+    const botColor   = humanColor === 'w' ? 'b' : 'w';
+    bot = new FkNoobBot_v1(botColor);
+}
+
+botSideSelect.addEventListener('change', () => {
+    const humanColor = botSideSelect.value;
+    const placement  = GameState.START_FEN.split(' ')[0];
+    // Always start with White to move
+    const initialFen = `${placement} w KQkq - 0 1`;
+
+    state.loadFEN(initialFen);
+    fenInput.value  = initialFen;
+    moveHistory     = [];
+    selected        = null;
+    legalMoves      = [];
+
+    if (humanColor === 'b') boardEl.classList.add('flipped');
+    else                 boardEl.classList.remove('flipped');
+
+    setupBot();
+    updateBoard();
+
+    if (botToggle.checked && state.activeColor === bot.color) {
+        bot.makeMove(state, handleBotMove);
+    }
+});
+
+// Initialize on load
+botSideSelect.dispatchEvent(new Event('change'));
+
 setFenBtn.addEventListener('click', () => {
     const fen = fenInput.value.trim();
     if (!fen) return alert('Please enter a FEN string.');
@@ -55,6 +111,8 @@ setFenBtn.addEventListener('click', () => {
         moveHistory = [];
         selected    = null;
         legalMoves  = [];
+        boardEl.classList.remove('flipped');
+        setupBot();
         updateBoard();
     } catch (err) {
         alert('Invalid FEN:\n' + err.message);
@@ -62,11 +120,16 @@ setFenBtn.addEventListener('click', () => {
 });
 
 resetBtn.addEventListener('click', () => {
-    state.loadFEN();
-    fenInput.value = GameState.START_FEN;
+    const placement  = GameState.START_FEN.split(' ')[0];
+    const defaultFen = `${placement} w KQkq - 0 1`;
+
+    state.loadFEN(defaultFen);
+    fenInput.value = defaultFen;
     moveHistory = [];
     selected    = null;
     legalMoves  = [];
+    boardEl.classList.remove('flipped');
+    setupBot();
     updateBoard();
 });
 
@@ -82,63 +145,52 @@ undoBtn.addEventListener('click', () => {
     updateBoard();
 });
 
-// --- board click handler ---
 boardEl.addEventListener('click', e => {
     const sq = e.target.closest('td')?.dataset.square;
     if (!sq) return;
     const { rank, file } = notationToCoords(sq);
+    const piece = state.board[rank][file];
 
-    if (!selected) {
-        const piece = state.board[rank][file];
-        if (piece && piece.color === state.activeColor) {
-            selected   = { rank, file };
-            legalMoves = state.getLegalMoves()
-                .filter(m => m.from.rank === rank && m.from.file === file);
-        }
-    } else {
-        const dests = legalMoves.filter(m => m.to.rank === rank && m.to.file === file);
+    // (Re)select your own piece
+    if (piece && piece.color === state.activeColor) {
+        selected   = { rank, file };
+        legalMoves = state.getLegalMoves()
+            .filter(m => m.from.rank === rank && m.from.file === file);
+        updateBoard();
+        return;
+    }
+
+    // If a piece is selected, attempt move
+    if (selected) {
+        const dests = legalMoves.filter(
+            m => m.to.rank === rank && m.to.file === file
+        );
         if (dests.length) {
-            // choose promotion if needed
-            let move;
-            if (dests.length === 1) {
-                move = dests[0];
-            } else {
-                const choice = window.prompt(
-                    'Promote to (Q=Queen, R=Rook, B=Bishop, N=Knight)?',
-                    'Q'
-                )?.toUpperCase();
-                const promoMap = { Q: Queen, R: Rook, B: Bishop, N: Knight };
-                const Pcls = promoMap[choice] || Queen;
-                move = dests.find(m => m.promotion === Pcls) || dests[0];
+            let move = dests[0];
+            if (dests.length > 1) {
+                const choice     = window.prompt('Promote to (Q,R,B,N)?','Q')?.toUpperCase();
+                const promoMap   = { Q:Queen, R:Rook, B:Bishop, N:Knight };
+                const Pcls       = promoMap[choice] || Queen;
+                move             = dests.find(m => m.promotion === Pcls) || move;
             }
 
             state.makeMove(move);
-
-            // record history entry
             const fromSq = coordsToNotation(move.from);
             const toSq   = coordsToNotation(move.to);
             const promo  = move.promotion ? `=${move.promotion.name.charAt(0)}` : '';
             moveHistory.push(`${fromSq}→${toSq}${promo}`);
 
-            // end‐of‐game alerts
-            if (state.isCheckmate()) {
-                const winner = state.activeColor === 'w' ? 'Black' : 'White';
-                alert(`${winner} wins by checkmate!`);
-            } else if (state.isStalemate()) {
-                alert('Draw by stalemate.');
-            } else if (state.isDraw()) {
-                alert('Draw.');
+            if      (state.isCheckmate()) alert(`${state.activeColor==='w'?'Black':'White'} wins!`);
+            else if (state.isStalemate()) alert('Draw by stalemate.');
+            else if (state.isDraw())      alert('Draw.');
+
+            selected   = null;
+            legalMoves = [];
+            updateBoard();
+
+            if (botToggle.checked && state.activeColor === bot.color) {
+                bot.makeMove(state, handleBotMove);
             }
         }
-
-        selected   = null;
-        legalMoves = [];
     }
-
-    updateBoard();
 });
-
-
-
-// initial render
-updateBoard();

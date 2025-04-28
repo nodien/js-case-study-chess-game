@@ -9,6 +9,19 @@
 <body>
 <header class="title-header">Chess Engine by Dien</header>
 <main class="layout">
+    <label for="botSide">
+        Play as:
+        <select id="botSide">
+            <option value="w">White</option>
+            <option value="b">Black</option>
+        </select>
+    </label>
+    <div class="bot-toggle">
+        <label for="enableBot">
+            <input type="checkbox" id="enableBot" checked />
+               Enable FkNoobBot_v1
+        </label>
+    </div>
     <section id="board-container">
         <div id="board" aria-label="Chess board"></div>
     </section>

@@ -163,3 +163,9 @@ footer {
 #board.flipped img {
     transform: rotate(180deg);
 }
+
+.controls .bot-toggle {
+    display: inline-block;
+    margin-right: 1em;
+    vertical-align: middle;
+}
