@@ -15,6 +15,7 @@ const setFenBtn = document.getElementById('setFenBtn');
 const resetBtn  = document.getElementById('resetBtn');
 const undoBtn   = document.getElementById('undoBtn');
 const moveList  = document.getElementById('moveList');
+const flipBtn   = document.getElementById('flipBtn');
 
 let selected    = null;
 let legalMoves  = [];
@@ -67,6 +68,10 @@ resetBtn.addEventListener('click', () => {
     selected    = null;
     legalMoves  = [];
     updateBoard();
+});
+
+flipBtn.addEventListener('click', () => {
+    boardEl.classList.toggle('flipped');
 });
 
 undoBtn.addEventListener('click', () => {
@@ -132,6 +137,8 @@ boardEl.addEventListener('click', e => {
 
     updateBoard();
 });
+
+
 
 // initial render
 updateBoard();

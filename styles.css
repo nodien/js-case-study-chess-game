@@ -155,3 +155,11 @@ footer {
     margin: 0 0 16px;
     color: #333;
 }
+
+#board.flipped table {
+    transform: rotate(180deg);
+}
+
+#board.flipped img {
+    transform: rotate(180deg);
+}
